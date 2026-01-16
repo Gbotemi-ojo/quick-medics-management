@@ -7,9 +7,11 @@ const Login = ({ onLoginSuccess }) => {
   const [view, setView] = useState('LOGIN'); // 'LOGIN', 'FORGOT', 'RESET'
   
   // Form States
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  // Reset Flow States
+  const [resetEmail, setResetEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   
@@ -24,11 +26,12 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
     setError('');
     try {
-      const data = await loginUser(username, password);
+      // Send EMAIL and PASSWORD
+      const data = await loginUser(email, password);
       localStorage.setItem('token', data.token); 
       onLoginSuccess(); 
     } catch (err) {
-      setError('Invalid username or password');
+      setError('Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -40,9 +43,9 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
     setError('');
     try {
-      await requestPasswordReset(email);
-      setSuccessMsg(`OTP sent to ${email}`);
-      setView('RESET'); // Move to next step
+      await requestPasswordReset(resetEmail);
+      setSuccessMsg(`OTP sent to ${resetEmail}`);
+      setView('RESET'); 
     } catch (err) {
       setError(err.message);
     } finally {
@@ -56,10 +59,10 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
     setError('');
     try {
-      await confirmPasswordReset(email, otp, newPassword);
+      await confirmPasswordReset(resetEmail, otp, newPassword);
       setSuccessMsg('Password reset successful! Please login.');
-      setView('LOGIN'); // Go back to login
-      setPassword(''); // Clear fields
+      setView('LOGIN'); 
+      setPassword(''); 
       setOtp('');
       setNewPassword('');
     } catch (err) {
@@ -73,7 +76,6 @@ const Login = ({ onLoginSuccess }) => {
     <div className="login-page">
       <div className="login-card">
         
-        {/* Header Section */}
         <div className="login-header">
           <div className="logo-circle">QM</div>
           <h2>Quick Medics</h2>
@@ -91,20 +93,24 @@ const Login = ({ onLoginSuccess }) => {
         {view === 'LOGIN' && (
           <form onSubmit={handleLogin}>
             <div className="input-group">
-              <label>Username</label>
+              <label>Email Address</label>
               <input 
-                type="text" value={username} 
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter admin username" required 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com" 
+                required 
               />
             </div>
             
             <div className="input-group">
               <label>Password</label>
               <input 
-                type="password" value={password} 
+                type="password" 
+                value={password} 
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" required 
+                placeholder="••••••••" 
+                required 
               />
               <div style={{textAlign:'right', marginTop:'5px'}}>
                 <button type="button" className="link-btn" onClick={() => { setView('FORGOT'); setError(''); setSuccessMsg(''); }}>
@@ -119,15 +125,17 @@ const Login = ({ onLoginSuccess }) => {
           </form>
         )}
 
-        {/* --- VIEW: FORGOT PASSWORD (Enter Email) --- */}
+        {/* --- VIEW: FORGOT PASSWORD --- */}
         {view === 'FORGOT' && (
           <form onSubmit={handleForgot}>
             <div className="input-group">
               <label>Registered Email</label>
               <input 
-                type="email" value={email} 
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com" required 
+                type="email" 
+                value={resetEmail} 
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="admin@example.com" 
+                required 
               />
             </div>
 
@@ -141,24 +149,28 @@ const Login = ({ onLoginSuccess }) => {
           </form>
         )}
 
-        {/* --- VIEW: RESET PASSWORD (Enter OTP) --- */}
+        {/* --- VIEW: RESET PASSWORD --- */}
         {view === 'RESET' && (
           <form onSubmit={handleReset}>
             <div className="input-group">
-              <label>OTP Code (Check Email)</label>
+              <label>OTP Code</label>
               <input 
-                type="text" value={otp} 
+                type="text" 
+                value={otp} 
                 onChange={(e) => setOtp(e.target.value)}
-                placeholder="123456" required 
+                placeholder="123456" 
+                required 
               />
             </div>
 
             <div className="input-group">
               <label>New Password</label>
               <input 
-                type="password" value={newPassword} 
+                type="password" 
+                value={newPassword} 
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="New strong password" required 
+                placeholder="New strong password" 
+                required 
               />
             </div>
 

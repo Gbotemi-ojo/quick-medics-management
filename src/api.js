@@ -11,12 +11,11 @@ const getAuthHeaders = () => {
   };
 };
 
-// --- AUTH ---
-export const loginUser = async (username, password) => {
+export const loginUser = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
   });
   if (!response.ok) throw new Error('Login failed');
   return await response.json();
@@ -48,12 +47,8 @@ export const confirmPasswordReset = async (email, otp, newPassword) => {
   return await response.json();
 };
 
-// --- DRUGS ---
-// Updated to accept sortBy and sortOrder
 export const fetchDrugs = async (page = 1, limit = 20, search = '', sortBy = 'created_at', sortOrder = 'desc') => {
   const headers = getAuthHeaders();
-  
-  // Build the URL with all parameters
   const url = `${API_URL}/drugs?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
   const response = await fetch(url, { headers: { 'Authorization': headers.Authorization } });
@@ -84,4 +79,23 @@ export const updateDrug = async (id, drugData) => {
     body: JSON.stringify(drugData),
   });
   return await response.json();
+};
+
+export const fetchAllOrders = async () => {
+    const response = await fetch(`${API_URL}/orders/all?t=${new Date().getTime()}`, {
+        headers: getAuthHeaders(),
+    });
+    if(!response.ok) throw new Error("Failed to fetch orders");
+    const result = await response.json();
+    return result.data; 
+};
+
+// --- NEW FUNCTION ---
+export const updateOrderStatus = async (orderId, status) => {
+    const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+    });
+    return await response.json();
 };
