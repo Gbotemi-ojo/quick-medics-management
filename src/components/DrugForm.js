@@ -1,4 +1,3 @@
-// src/components/DrugForm.js
 import React, { useState, useEffect } from 'react';
 import { createDrug, updateDrug } from '../api';
 
@@ -11,10 +10,11 @@ const DrugForm = ({ onDrugSaved, drugToEdit, existingCategories = [] }) => {
     Category: '',
     Retail_Price: '',
     In_Stock: '',
-    image_url: ''
+    image_url: '',
+    discountPercent: 0,
+    isFeatured: false
   });
 
-  // Populate form if we are Editing, otherwise Clear it
   useEffect(() => {
     if (drugToEdit) {
       setFormData({
@@ -22,16 +22,19 @@ const DrugForm = ({ onDrugSaved, drugToEdit, existingCategories = [] }) => {
         Category: drugToEdit.category,
         Retail_Price: drugToEdit.price,
         In_Stock: drugToEdit.stock,
-        image_url: drugToEdit.image || ''
+        image_url: drugToEdit.image || '',
+        discountPercent: drugToEdit.discountPercent || 0,
+        isFeatured: drugToEdit.isFeatured || false
       });
       setIsNewCategory(false);
     } else {
-        setFormData({ Product: '', Category: '', Retail_Price: '', In_Stock: '', image_url: '' });
+        setFormData({ Product: '', Category: '', Retail_Price: '', In_Stock: '', image_url: '', discountPercent: 0, isFeatured: false });
     }
   }, [drugToEdit]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleCategoryChange = (e) => {
@@ -49,19 +52,26 @@ const DrugForm = ({ onDrugSaved, drugToEdit, existingCategories = [] }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const payload = {
+          name: formData.Product,
+          category: formData.Category,
+          retailPrice: formData.Retail_Price,
+          stock: formData.In_Stock,
+          imageUrl: formData.image_url,
+          discountPercent: Number(formData.discountPercent),
+          isFeatured: formData.isFeatured
+      };
+
       if (drugToEdit) {
-        await updateDrug(drugToEdit.id, formData);
+        await updateDrug(drugToEdit.id, payload);
         alert('Drug updated successfully!');
       } else {
-        await createDrug(formData);
+        await createDrug(payload);
         alert('Drug added successfully!');
       }
       
-      // Reset Form
-      setFormData({ Product: '', Category: '', Retail_Price: '', In_Stock: '', image_url: '' });
+      setFormData({ Product: '', Category: '', Retail_Price: '', In_Stock: '', image_url: '', discountPercent: 0, isFeatured: false });
       setIsNewCategory(false);
-      
-      // Notify parent to refresh list
       if (onDrugSaved) onDrugSaved(); 
     } catch (error) {
       alert('Error: ' + error.message);
@@ -75,9 +85,7 @@ const DrugForm = ({ onDrugSaved, drugToEdit, existingCategories = [] }) => {
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom:'15px'}}>
         <h3 style={{margin:0}}>{drugToEdit ? `Edit Drug #${drugToEdit.id}` : 'Add New Drug'}</h3>
         {drugToEdit && (
-            <button onClick={() => onDrugSaved()} style={{fontSize: '0.8rem', padding: '5px 10px', cursor:'pointer', background:'#ddd', border:'none', borderRadius:'4px'}}>
-                Cancel
-            </button>
+            <button onClick={() => onDrugSaved()} style={{fontSize: '0.8rem', padding: '5px 10px', cursor:'pointer', background:'#ddd', border:'none', borderRadius:'4px'}}>Cancel</button>
         )}
       </div>
 
@@ -103,13 +111,7 @@ const DrugForm = ({ onDrugSaved, drugToEdit, existingCategories = [] }) => {
                 </select>
             ) : (
                 <div style={{display: 'flex', gap: '5px', marginBottom:'10px'}}>
-                    <input 
-                        name="Category" 
-                        value={formData.Category} 
-                        onChange={handleChange} 
-                        placeholder="Type new category name..." 
-                        autoFocus
-                    />
+                    <input name="Category" value={formData.Category} onChange={handleChange} placeholder="Type new category name..." autoFocus />
                     <button type="button" onClick={() => setIsNewCategory(false)} style={{padding:'0 15px'}}>x</button>
                 </div>
             )}
@@ -124,6 +126,23 @@ const DrugForm = ({ onDrugSaved, drugToEdit, existingCategories = [] }) => {
             <label>Stock Qty</label>
             <input type="number" name="In_Stock" value={formData.In_Stock} onChange={handleChange} required />
           </div>
+        </div>
+
+        <div className="form-row">
+            <div className="form-group">
+                <label>Discount %</label>
+                <input type="number" name="discountPercent" value={formData.discountPercent} onChange={handleChange} placeholder="0" min="0" max="100" />
+            </div>
+            <div className="form-group" style={{display:'flex', alignItems:'center', marginTop:'25px'}}>
+                <input 
+                    type="checkbox" 
+                    name="isFeatured" 
+                    checked={formData.isFeatured} 
+                    onChange={handleChange} 
+                    style={{width:'20px', height:'20px', marginRight:'10px'}} 
+                />
+                <label style={{marginBottom:0, cursor:'pointer'}}>Mark as "New Arrival"</label>
+            </div>
         </div>
 
         <div className="form-group">

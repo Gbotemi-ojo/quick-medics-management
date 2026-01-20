@@ -1,6 +1,7 @@
 // src/api.js
-// const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://quick-medics-be.vercel.app/api'
+export const API_URL = 'https://quick-medics-be.vercel.app/api'; 
+// export const API_URL = 'http://localhost:5000/api'; 
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return token ? { 
@@ -11,6 +12,7 @@ const getAuthHeaders = () => {
   };
 };
 
+// --- AUTH ---
 export const loginUser = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
@@ -47,18 +49,12 @@ export const confirmPasswordReset = async (email, otp, newPassword) => {
   return await response.json();
 };
 
+// --- DRUGS ---
 export const fetchDrugs = async (page = 1, limit = 20, search = '', sortBy = 'created_at', sortOrder = 'desc') => {
   const headers = getAuthHeaders();
   const url = `${API_URL}/drugs?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
-
   const response = await fetch(url, { headers: { 'Authorization': headers.Authorization } });
-  
-  if (response.status === 401 || response.status === 403) {
-    localStorage.removeItem('token');
-    window.location.reload(); 
-    return null;
-  }
-  
+  if (response.status === 401) { localStorage.removeItem('token'); window.location.reload(); return null; }
   const result = await response.json();
   return result.data;
 };
@@ -81,6 +77,63 @@ export const updateDrug = async (id, drugData) => {
   return await response.json();
 };
 
+// --- SECTIONS & CATEGORIES ---
+export const fetchCategories = async () => {
+    const response = await fetch(`${API_URL}/drugs/categories`);
+    const result = await response.json();
+    return result.data || [];
+};
+
+export const updateCategory = async (id, data) => {
+    const response = await fetch(`${API_URL}/drugs/categories/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+    });
+    return await response.json();
+};
+
+export const fetchSections = async () => {
+    const response = await fetch(`${API_URL}/drugs/sections`, { headers: getAuthHeaders() });
+    const result = await response.json();
+    return result.data || [];
+};
+
+export const createSection = async (data) => {
+    const response = await fetch(`${API_URL}/drugs/sections`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+    });
+    return await response.json();
+};
+
+export const deleteSection = async (id) => {
+    const response = await fetch(`${API_URL}/drugs/sections/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+    });
+    return await response.json();
+};
+
+// NEW: Section Items
+export const fetchSectionItems = async (sectionId) => {
+    const response = await fetch(`${API_URL}/drugs/sections/${sectionId}/items`, { headers: getAuthHeaders() });
+    const result = await response.json();
+    return result.data || [];
+};
+
+export const updateSectionItems = async (sectionId, drugIds) => {
+    const response = await fetch(`${API_URL}/drugs/sections/${sectionId}/items`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ drugIds })
+    });
+    return await response.json();
+};
+
+
+// --- ORDERS ---
 export const fetchAllOrders = async () => {
     const response = await fetch(`${API_URL}/orders/all?t=${new Date().getTime()}`, {
         headers: getAuthHeaders(),
@@ -90,7 +143,6 @@ export const fetchAllOrders = async () => {
     return result.data; 
 };
 
-// --- NEW FUNCTION ---
 export const updateOrderStatus = async (orderId, status) => {
     const response = await fetch(`${API_URL}/orders/${orderId}/status`, {
         method: 'PUT',
