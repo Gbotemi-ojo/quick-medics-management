@@ -12,7 +12,7 @@ const getAuthHeaders = () => {
   };
 };
 
-// --- AUTH ---
+// ... Auth functions (loginUser, etc) remain the same ...
 export const loginUser = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
@@ -49,7 +49,47 @@ export const confirmPasswordReset = async (email, otp, newPassword) => {
   return await response.json();
 };
 
-// --- DRUGS ---
+// --- BANNERS (UPDATED) ---
+export const fetchBanners = async () => {
+    const response = await fetch(`${API_URL}/banners`, { headers: getAuthHeaders() });
+    const result = await response.json();
+    return result.data || [];
+};
+
+export const createBanner = async (formData) => {
+    const token = localStorage.getItem('token');
+    // Note: Do NOT set Content-Type header manually when sending FormData
+    // The browser sets it automatically with the correct boundary
+    const response = await fetch(`${API_URL}/banners`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData
+    });
+    
+    if(!response.ok) throw new Error("Upload failed");
+    return await response.json();
+};
+
+export const deleteBanner = async (id) => {
+    const response = await fetch(`${API_URL}/banners/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+    });
+    return await response.json();
+};
+
+export const toggleBannerStatus = async (id, isActive) => {
+    const response = await fetch(`${API_URL}/banners/${id}/status`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ isActive })
+    });
+    return await response.json();
+};
+
+// ... (Rest of Drug, Order, Section functions remain unchanged) ...
 export const fetchDrugs = async (page = 1, limit = 20, search = '', sortBy = 'created_at', sortOrder = 'desc') => {
   const headers = getAuthHeaders();
   const url = `${API_URL}/drugs?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
@@ -77,7 +117,6 @@ export const updateDrug = async (id, drugData) => {
   return await response.json();
 };
 
-// --- SECTIONS & CATEGORIES ---
 export const fetchCategories = async () => {
     const response = await fetch(`${API_URL}/drugs/categories`);
     const result = await response.json();
@@ -116,7 +155,6 @@ export const deleteSection = async (id) => {
     return await response.json();
 };
 
-// NEW: Section Items
 export const fetchSectionItems = async (sectionId) => {
     const response = await fetch(`${API_URL}/drugs/sections/${sectionId}/items`, { headers: getAuthHeaders() });
     const result = await response.json();
@@ -132,8 +170,6 @@ export const updateSectionItems = async (sectionId, drugIds) => {
     return await response.json();
 };
 
-
-// --- ORDERS ---
 export const fetchAllOrders = async () => {
     const response = await fetch(`${API_URL}/orders/all?t=${new Date().getTime()}`, {
         headers: getAuthHeaders(),
