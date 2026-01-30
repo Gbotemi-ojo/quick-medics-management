@@ -1,6 +1,6 @@
 // src/api.js
 export const API_URL = 'https://quick-medics-be.vercel.app/api'; 
-// export const API_URL = 'http://localhost:5000/api'; 
+// export const API_URL = 'http://localhost:5000/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
